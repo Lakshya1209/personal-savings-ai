@@ -1,0 +1,8 @@
+# Requirements for Multi-Agentic AI Personal Savings Recommendation System
+google-genai>=2.24.0
+pandas>=2.1.4
+gradio>=6.9.0
+pydantic>=2.12.5
+matplotlib>=3.8.0
+python-dotenv>=1.0.0
+numpy>=1.26.0
