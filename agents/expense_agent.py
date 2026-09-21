@@ -16,7 +16,7 @@ if PROJECT_ROOT not in sys.path:
 
 from state import AnalysisState, ExpenseAgentOutput
 from tools.expense_tools import category_totals, essential_vs_discretionary, detect_recurring
-from agents.base_agent import invoke_gemini_structured
+from agents.base_agent import invoke_llm_structured
 
 
 SYSTEM_PROMPT = """
@@ -36,7 +36,7 @@ def run_expense_agent(state: AnalysisState, df: Union[pd.DataFrame, None] = None
     """
     Executes Expense Analysis Agent:
     - Calls category_totals, essential_vs_discretionary, detect_recurring
-    - Invokes Gemini for structured synthesis with exact tool figures
+    - Invokes Groq for structured synthesis with exact tool figures
     - Updates state['findings']['expense'] and appends to state['reasoning_log']
     """
     profile = state["profile"]
@@ -50,7 +50,7 @@ def run_expense_agent(state: AnalysisState, df: Union[pd.DataFrame, None] = None
     essential_tot = split["essential_total"]
     disc_tot = split["discretionary_total"]
     
-    # Prompt for Gemini synthesis
+    # Prompt for Groq synthesis
     prompt = f"""
     The Python expense tools have computed the following exact financial breakdown:
     - Category Totals: {cat_totals}
@@ -63,7 +63,7 @@ def run_expense_agent(state: AnalysisState, df: Union[pd.DataFrame, None] = None
     """
     
     # Attempt LLM structured generation
-    llm_result = invoke_gemini_structured(
+    llm_result = invoke_llm_structured(
         system_instruction=SYSTEM_PROMPT,
         prompt=prompt,
         pydantic_schema=ExpenseAgentOutput,

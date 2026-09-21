@@ -60,7 +60,7 @@ User Input -> [Diagnostic Agents] -> [Python Calculation Tools]
 - **No LLM Math:** The LLMs never perform arithmetic. Every rupee amount, percentage reduction, required savings velocity, and timeline metric is computed strictly by audited Python functions in the [`tools/`](tools/) directory.
 - **Strict Separation of Concerns:** LLMs are utilized solely for qualitative synthesis, natural language understanding, and context-aware strategy framing.
 - **Pydantic Validation:** All agent outputs are structured through typed Pydantic models.
-- **Deterministic Offline Fallbacks:** If the Gemini API is offline or unconfigured, the entire pipeline executes deterministically using embedded algorithmic rules without crashing.
+- **Deterministic Offline Fallbacks:** If the Groq API is offline or unconfigured, the entire pipeline executes deterministically using embedded algorithmic rules without crashing.
 
 ---
 
@@ -339,7 +339,7 @@ When the user clicks **Run Multi-Agent Analysis Pipeline**, the following sequen
 
 ```
 Step 01: [User Click] -> Gradio triggers run_pipeline_generator()
-Step 02: [Orchestrator] -> Parses free-text objective using Gemini/fallback heuristics into constraints dict
+Step 02: [Orchestrator] -> Parses free-text objective using Groq/fallback heuristics into constraints dict
 Step 03: [Orchestrator] -> Initializes AnalysisState blackboard (status: "initialized")
 Step 04: [Expense Agent] -> Reads profile, calls category_totals() and classify_essential_vs_discretionary()
 Step 05: [Expense Agent] -> Writes ExpenseAgentOutput to state["findings"]["expense"]

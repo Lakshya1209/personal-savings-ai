@@ -44,10 +44,6 @@ def get_llm_client():
     return _CLIENT
 
 
-# Backward-compatible alias for existing imports
-get_gemini_client = get_llm_client
-
-
 def get_candidate_models() -> List[str]:
     """
     Returns an ordered list of verified candidate models:
@@ -206,7 +202,3 @@ def invoke_llm_text(
             continue
 
     return None
-
-
-# Backward-compatible function alias for all existing agents
-invoke_gemini_structured = invoke_llm_structured

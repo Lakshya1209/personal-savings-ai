@@ -624,7 +624,7 @@ def render_account_html(user: dict, profile: dict) -> str:
             </div>
             <div class="account-detail-item">
                 <span class="detail-label">DATA ISOLATION</span>
-                <span class="detail-val">Private User Partition (SQLite)</span>
+                <span class="detail-val">Private User Partition (Neon PostgreSQL)</span>
             </div>
         </div>
     </div>

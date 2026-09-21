@@ -16,7 +16,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from state import AnalysisState
-from agents.base_agent import invoke_gemini_structured
+from agents.base_agent import invoke_llm_structured
 from agents.expense_agent import run_expense_agent
 from agents.budget_agent import run_budget_agent
 from agents.goal_agent import run_goal_agent
@@ -35,7 +35,7 @@ class UserConstraintSchema(BaseModel):
 
 def parse_user_objective_to_constraints(objective_text: str) -> Dict[str, Any]:
     """
-    Uses a scoped Gemini call (with deterministic fallback) to parse free-text
+    Uses a scoped Groq call (with deterministic fallback) to parse free-text
     user instructions into structured constraints for the multi-agent system.
     """
     if not objective_text or not objective_text.strip():
@@ -55,7 +55,7 @@ def parse_user_objective_to_constraints(objective_text: str) -> Dict[str, Any]:
     """
     prompt = f"User Request: '{objective_text}'\nExtract structured constraints."
     
-    parsed = invoke_gemini_structured(
+    parsed = invoke_llm_structured(
         system_instruction=system_prompt,
         prompt=prompt,
         pydantic_schema=UserConstraintSchema,

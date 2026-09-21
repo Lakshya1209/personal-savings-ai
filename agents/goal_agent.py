@@ -14,7 +14,7 @@ if PROJECT_ROOT not in sys.path:
 
 from state import AnalysisState, GoalAgentOutput
 from tools.goal_tools import calculate_required_monthly_saving, project_completion_date
-from agents.base_agent import invoke_gemini_structured
+from agents.base_agent import invoke_llm_structured
 
 SYSTEM_PROMPT = """
 You are the Goal Feasibility Agent in a multi-agent personal finance advisory system.
@@ -80,7 +80,7 @@ def run_goal_agent(state: AnalysisState) -> AnalysisState:
     projected_completion_months, and a concise reasoning string.
     """
 
-    llm_result = invoke_gemini_structured(
+    llm_result = invoke_llm_structured(
         system_instruction=SYSTEM_PROMPT,
         prompt=prompt,
         pydantic_schema=GoalAgentOutput,

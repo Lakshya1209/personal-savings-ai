@@ -15,7 +15,7 @@ if PROJECT_ROOT not in sys.path:
 
 from state import AnalysisState, StrategyItem, SavingsAgentOutput
 from tools.savings_tools import simulate_category_reduction, combine_strategies
-from agents.base_agent import invoke_gemini_structured
+from agents.base_agent import invoke_llm_structured
 
 SYSTEM_PROMPT = """
 You are the Savings Recommendation Agent in a multi-agent personal finance system.
@@ -153,7 +153,7 @@ def run_savings_agent(state: AnalysisState) -> AnalysisState:
             status="candidate",
         ))
 
-    # Optional Gemini enhancement for natural language phrasing
+    # Optional LLM enhancement for natural language phrasing
     prompt = f"""
     The Python savings tools formulated these candidate strategies using exact arithmetic:
     {[s.model_dump() for s in strategies_built]}
@@ -165,7 +165,7 @@ def run_savings_agent(state: AnalysisState) -> AnalysisState:
     revision_count={revision_count}, and a clear reasoning explanation.
     """
 
-    llm_result = invoke_gemini_structured(
+    llm_result = invoke_llm_structured(
         system_instruction=SYSTEM_PROMPT,
         prompt=prompt,
         pydantic_schema=SavingsAgentOutput,

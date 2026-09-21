@@ -15,7 +15,7 @@ if PROJECT_ROOT not in sys.path:
 
 from state import AnalysisState, SafetyAgentOutput, SafetyEvaluationItem
 from tools.safety_tools import check_essential_floor, check_emergency_buffer
-from agents.base_agent import invoke_gemini_structured
+from agents.base_agent import invoke_llm_structured
 
 SYSTEM_PROMPT = """
 You are the Safety & Feasibility Agent in a multi-agent personal finance advisory system.
@@ -108,7 +108,7 @@ def run_safety_agent(state: AnalysisState) -> AnalysisState:
             strat_copy["safety_notes"] = reason
             validated_list.append(strat_copy)
 
-    # Prompt Gemini for structured review summary
+    # Prompt LLM for structured review summary
     prompt = f"""
     The Python safety tools evaluated candidate strategies:
     {[e.model_dump() for e in evaluations]}
@@ -120,7 +120,7 @@ def run_safety_agent(state: AnalysisState) -> AnalysisState:
     Return a structured JSON object conforming to SafetyAgentOutput.
     """
 
-    llm_result = invoke_gemini_structured(
+    llm_result = invoke_llm_structured(
         system_instruction=SYSTEM_PROMPT,
         prompt=prompt,
         pydantic_schema=SafetyAgentOutput,

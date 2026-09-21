@@ -14,7 +14,7 @@ if PROJECT_ROOT not in sys.path:
 
 from state import AnalysisState, BudgetAgentOutput
 from tools.budget_tools import calculate_savings_rate, calculate_discretionary_capacity
-from agents.base_agent import invoke_gemini_structured
+from agents.base_agent import invoke_llm_structured
 
 SYSTEM_PROMPT = """
 You are the Budget Analysis Agent in a multi-agent personal finance advisory system.
@@ -66,7 +66,7 @@ def run_budget_agent(state: AnalysisState) -> AnalysisState:
     current_savings, savings_rate, discretionary_capacity, health_status, and a concise reasoning string.
     """
 
-    llm_result = invoke_gemini_structured(
+    llm_result = invoke_llm_structured(
         system_instruction=SYSTEM_PROMPT,
         prompt=prompt,
         pydantic_schema=BudgetAgentOutput,
