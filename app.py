@@ -2047,51 +2047,55 @@ with gr.Blocks(title="Personal Savings & Cash Flow Advisory") as demo:
     # Wire Authentication & Event Handlers
     # -----------------------------------------------------------------------
     def handle_login(email, password):
-        user, err = database.authenticate_user(email, password)
-        if err:
-            return None, gr.update(visible=True), gr.update(visible=False), f"❌ {err}", *([gr.update()] * 21)
-        
-        # Load user profile
-        prof = database.get_user_profile(user["id"])
-        plans = database.get_user_plans(user["id"])
-        latest_plan = plans[0] if plans else None
+        try:
+            user, err = database.authenticate_user(email, password)
+            if err:
+                return None, gr.update(visible=True), gr.update(visible=False), f"❌ {err}", *([gr.update()] * 22)
+            
+            # Load user profile
+            prof = database.get_user_profile(user["id"])
+            plans = database.get_user_plans(user["id"])
+            latest_plan = plans[0] if plans else None
 
-        hero_html = render_dashboard_metrics(user, prof, latest_plan)
-        goal_html = render_dashboard_active_goal(prof)
-        cash_fig = create_dashboard_cashflow_chart(prof)
-        split_fig = create_dashboard_breakdown_chart(prof)
-        saved_html = render_saved_plans_html(user["id"])
-        acc_html = render_account_html(user, prof)
+            hero_html = render_dashboard_metrics(user, prof, latest_plan)
+            goal_html = render_dashboard_active_goal(prof)
+            cash_fig = create_dashboard_cashflow_chart(prof)
+            split_fig = create_dashboard_breakdown_chart(prof)
+            saved_html = render_saved_plans_html(user["id"])
+            acc_html = render_account_html(user, prof)
 
-        return (
-            user,
-            gr.update(visible=False),  # hide landing
-            gr.update(visible=True),   # show app
-            "",                        # clear login status
-            hero_html,
-            goal_html,
-            cash_fig,
-            split_fig,
-            saved_html,
-            acc_html,
-            prof,                      # current_profile state
-            # Form field values from user profile:
-            user["full_name"],
-            prof.get("monthly_income", 60000.0),
-            prof.get("rent", 18000.0),
-            prof.get("groceries", 9000.0),
-            prof.get("utilities", 3500.0),
-            prof.get("debt_emi", 5000.0),
-            prof.get("transport", 3500.0),
-            prof.get("dining_out", 5000.0),
-            prof.get("shopping", 4000.0),
-            prof.get("entertainment", 2500.0),
-            prof.get("subscriptions", 1500.0),
-            prof.get("goal_amount", 150000.0),
-            prof.get("goal_deadline_months", 12),
-            prof.get("existing_savings", 30000.0),
-            prof.get("objective", "Build emergency savings."),
-        )
+            return (
+                user,
+                gr.update(visible=False),  # hide landing
+                gr.update(visible=True),   # show app
+                "",                        # clear login status
+                hero_html,
+                goal_html,
+                cash_fig,
+                split_fig,
+                saved_html,
+                acc_html,
+                prof,                      # current_profile state
+                # Form field values from user profile:
+                user["full_name"],
+                prof.get("monthly_income", 60000.0),
+                prof.get("rent", 18000.0),
+                prof.get("groceries", 9000.0),
+                prof.get("utilities", 3500.0),
+                prof.get("debt_emi", 5000.0),
+                prof.get("transport", 3500.0),
+                prof.get("dining_out", 5000.0),
+                prof.get("shopping", 4000.0),
+                prof.get("entertainment", 2500.0),
+                prof.get("subscriptions", 1500.0),
+                prof.get("goal_amount", 150000.0),
+                prof.get("goal_deadline_months", 12),
+                prof.get("existing_savings", 30000.0),
+                prof.get("objective", "Build emergency savings."),
+            )
+        except Exception as e:
+            logger.error(f"Login error: {e}")
+            return None, gr.update(visible=True), gr.update(visible=False), "❌ An unexpected error occurred during sign in. Please try again.", *([gr.update()] * 22)
 
     login_btn.click(
         fn=handle_login,
@@ -2110,12 +2114,23 @@ with gr.Blocks(title="Personal Savings & Cash Flow Advisory") as demo:
 
 
     def handle_signup(name, email, pass1, pass2):
-        if pass1 != pass2:
-            return None, gr.update(visible=True), gr.update(visible=False), "❌ Passwords do not match.", *([gr.update()] * 21)
-        user, err = database.create_user(email, pass1, name)
-        if err:
-            return None, gr.update(visible=True), gr.update(visible=False), f"❌ {err}", *([gr.update()] * 21)
-        return handle_login(email, pass1)
+        try:
+            if not name or not name.strip():
+                return None, gr.update(visible=True), gr.update(visible=False), "❌ Please enter your full name.", *([gr.update()] * 22)
+            if not email or "@" not in email:
+                return None, gr.update(visible=True), gr.update(visible=False), "❌ Please enter a valid email address.", *([gr.update()] * 22)
+            if pass1 != pass2:
+                return None, gr.update(visible=True), gr.update(visible=False), "❌ Passwords do not match.", *([gr.update()] * 22)
+            if len(pass1) < 6:
+                return None, gr.update(visible=True), gr.update(visible=False), "❌ Password must be at least 6 characters long.", *([gr.update()] * 22)
+            
+            user, err = database.create_user(email, pass1, name)
+            if err:
+                return None, gr.update(visible=True), gr.update(visible=False), f"❌ {err}", *([gr.update()] * 22)
+            return handle_login(email, pass1)
+        except Exception as e:
+            logger.error(f"Registration error: {e}")
+            return None, gr.update(visible=True), gr.update(visible=False), "❌ Registration failed. Please try again.", *([gr.update()] * 22)
 
     signup_btn.click(
         fn=handle_signup,

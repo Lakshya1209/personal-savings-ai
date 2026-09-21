@@ -124,24 +124,29 @@ def execute_sql(query: str, params: Optional[List[Any]] = None) -> List[Dict[str
             try:
                 import psycopg2
                 from psycopg2.extras import RealDictCursor
-                conn = psycopg2.connect(db_url, connect_timeout=3)
-                _DIRECT_AVAILABLE = True
-                with conn:
-                    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                        pg_query = normalized_query
-                        if params:
-                            for i in range(len(params), 0, -1):
-                                pg_query = pg_query.replace(f"${i}", "%s")
-                            cur.execute(pg_query, params)
-                        else:
-                            cur.execute(pg_query)
-                        
-                        if cur.description:
-                            return [dict(r) for r in cur.fetchall()]
-                        return []
+                conn = psycopg2.connect(db_url, connect_timeout=10)
+                try:
+                    with conn:
+                        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                            pg_query = normalized_query
+                            if params:
+                                for i in range(len(params), 0, -1):
+                                    pg_query = pg_query.replace(f"${i}", "%s")
+                                cur.execute(pg_query, params)
+                            else:
+                                cur.execute(pg_query)
+                            
+                            if cur.description:
+                                rows = [dict(r) for r in cur.fetchall()]
+                            else:
+                                rows = []
+                    _DIRECT_AVAILABLE = True
+                    return rows
+                finally:
+                    conn.close()
             except Exception as pg_err:
                 _DIRECT_AVAILABLE = False
-                logger.info("Direct PostgreSQL port 5432 unreachable. Switching to Neon HTTPS (port 443).")
+                logger.info(f"Direct PostgreSQL port 5432 unreachable ({pg_err}). Switching to Neon HTTPS (port 443).")
 
         # 2. Execute via Neon's official HTTPS SQL API (port 443)
         try:
@@ -152,7 +157,7 @@ def execute_sql(query: str, params: Optional[List[Any]] = None) -> List[Dict[str
             logger.error(f"Neon database query error: {http_err}")
             raise http_err
 
-    # 2. Local SQLite Fallback
+    # 2. Local SQLite Fallback (only if DATABASE_URL is not set)
     import sqlite3
     conn = sqlite3.connect(SQLITE_DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
@@ -167,10 +172,11 @@ def execute_sql(query: str, params: Optional[List[Any]] = None) -> List[Dict[str
             cur.execute(sqlite_query, params)
         else:
             cur.execute(sqlite_query)
+        
+        # Must consume results BEFORE commit() to prevent "cannot commit transaction - SQL statements in progress"
+        rows = [dict(r) for r in cur.fetchall()] if cur.description else []
         conn.commit()
-        if cur.description:
-            return [dict(r) for r in cur.fetchall()]
-        return []
+        return rows
     finally:
         conn.close()
 
