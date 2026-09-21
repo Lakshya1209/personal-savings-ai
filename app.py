@@ -25,7 +25,8 @@ from agents.orchestrator import run_pipeline_generator
 from tools.budget_tools import calculate_savings_rate
 from tools.goal_tools import calculate_required_monthly_saving, project_completion_date
 from tools.savings_tools import simulate_category_reduction, combine_strategies
-from agents.base_agent import get_gemini_client, get_candidate_models
+from agents.base_agent import get_llm_client, get_candidate_models
+from agents.faq_agent import get_faq_response
 
 # ---------------------------------------------------------------------------
 # Global Session Fallbacks (Isolated per user in DB)
@@ -1836,7 +1837,7 @@ with gr.Blocks(title="Personal Savings & Cash Flow Advisory") as demo:
                 with gr.Row():
                     gr.HTML("""
                     <div style="display:flex; gap:10px; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
-                        <span class="ai-status-pill">✨ Gemini AI Active (gemini-3.5-flash-lite)</span>
+                        <span class="ai-status-pill">⚡ Groq AI Active (openai/gpt-oss-20b)</span>
                         <span class="security-status-badge"><span>●</span> Essential Floor Active</span>
                     </div>
                     """)
@@ -1994,6 +1995,53 @@ with gr.Blocks(title="Personal Savings & Cash Flow Advisory") as demo:
                 account_html_display = gr.HTML("")
                 with gr.Row():
                     account_logout_btn = gr.Button("Sign Out of Account", variant="secondary")
+
+            # ---------------------------------------------------------------
+            # TAB 7: FAQ & FINANCIAL INFORMATION BOT
+            # ---------------------------------------------------------------
+            with gr.TabItem("Financial Assistant & FAQ", id="tab_faq"):
+                gr.HTML("""
+                <div class="section-card" style="margin-bottom:15px; border-left: 4px solid #C97A3E;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <div style="font-weight:700; font-size:15px; color:#1C232B;">Educational Financial Assistant & System Guide</div>
+                            <div style="font-size:13px; color:#5C5648; margin-top:3px;">Ask questions about our 6-agent architecture, safety audit floors, scenario modeling, or general personal finance concepts.</div>
+                        </div>
+                        <span class="security-status-badge"><span>●</span> Privacy Guard Active (Zero Access to User Financial Records)</span>
+                    </div>
+                </div>
+                """)
+
+                faq_chatbot = gr.Chatbot(
+                    label="Assistant Dialogue",
+                    height=450,
+                    show_label=False
+                )
+
+                gr.HTML('<div style="font-size:12.5px; font-weight:600; color:#8A8578; margin: 8px 0 4px 0;">Suggested Quick Questions:</div>')
+                with gr.Row():
+                    faq_chip1 = gr.Button("💡 What does this application do?", size="sm", variant="secondary")
+                    faq_chip2 = gr.Button("🤖 What are the 6 autonomous agents?", size="sm", variant="secondary")
+                    faq_chip3 = gr.Button("🛡️ What is an emergency fund?", size="sm", variant="secondary")
+                    faq_chip4 = gr.Button("📊 What is the 50/30/20 rule?", size="sm", variant="secondary")
+
+                with gr.Row():
+                    faq_input = gr.Textbox(
+                        placeholder="Ask a question about personal finance or how this advisory system works...",
+                        label="Your Question",
+                        scale=6,
+                        lines=1,
+                        max_lines=3,
+                        container=False
+                    )
+                    faq_send_btn = gr.Button("Ask Assistant", variant="primary", scale=1)
+                    faq_clear_btn = gr.Button("Clear Chat", variant="secondary", scale=1)
+
+                gr.HTML("""
+                <div style="font-size:11.5px; color:#8A8578; margin-top:10px; text-align:center;">
+                    ⚠️ <em>Educational guidance only. This assistant does not provide certified financial, investment, or tax advice. To build your personal savings plan, use the 'Build Savings Plan' tab.</em>
+                </div>
+                """)
 
     # -----------------------------------------------------------------------
     # Wire Authentication & Event Handlers
@@ -2231,6 +2279,60 @@ with gr.Blocks(title="Personal Savings & Cash Flow Advisory") as demo:
         fn=simulate_what_if,
         inputs=[sim_dining_slider, sim_shopping_slider, sim_sub_slider, sim_income_slider, session_user, current_profile],
         outputs=[what_if_output_md, what_if_plot]
+    )
+
+    # FAQ Bot Event Handlers
+    def handle_faq_chat(user_msg, history):
+        if not user_msg or not user_msg.strip():
+            return "", history
+        
+        chat_turns = []
+        if history:
+            for item in history:
+                if isinstance(item, (list, tuple)) and len(item) == 2:
+                    chat_turns.append((item[0], item[1]))
+                elif isinstance(item, dict):
+                    chat_turns.append((item.get("role", ""), item.get("content", "")))
+
+        bot_reply = get_faq_response(user_msg.strip(), chat_turns)
+        new_history = list(history) if history else []
+        new_history.append((user_msg.strip(), bot_reply))
+        return "", new_history
+
+    faq_send_btn.click(
+        fn=handle_faq_chat,
+        inputs=[faq_input, faq_chatbot],
+        outputs=[faq_input, faq_chatbot]
+    )
+    faq_input.submit(
+        fn=handle_faq_chat,
+        inputs=[faq_input, faq_chatbot],
+        outputs=[faq_input, faq_chatbot]
+    )
+    faq_clear_btn.click(
+        fn=lambda: [],
+        inputs=[],
+        outputs=[faq_chatbot]
+    )
+    faq_chip1.click(
+        fn=lambda h: handle_faq_chat("What does this application do?", h),
+        inputs=[faq_chatbot],
+        outputs=[faq_input, faq_chatbot]
+    )
+    faq_chip2.click(
+        fn=lambda h: handle_faq_chat("What are the 6 autonomous agents in this system?", h),
+        inputs=[faq_chatbot],
+        outputs=[faq_input, faq_chatbot]
+    )
+    faq_chip3.click(
+        fn=lambda h: handle_faq_chat("What is an emergency fund?", h),
+        inputs=[faq_chatbot],
+        outputs=[faq_input, faq_chatbot]
+    )
+    faq_chip4.click(
+        fn=lambda h: handle_faq_chat("What is the 50/30/20 budgeting rule?", h),
+        inputs=[faq_chatbot],
+        outputs=[faq_input, faq_chatbot]
     )
 
 if __name__ == "__main__":

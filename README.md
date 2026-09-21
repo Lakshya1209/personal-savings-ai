@@ -2,7 +2,7 @@
 
 A multi-agent artificial intelligence application demonstrating authentic agentic AI architecture (planning, delegation, tool use, inter-agent state, and an iterative reject/revise feedback loop) designed for personal financial planning and savings optimization.
 
-Built with **Python 3.11+**, **Google Gemini SDK (`google-genai`)**, **pandas**, and **Gradio Blocks**.
+Built with **Python 3.11+**, **Groq SDK (`groq`)**, **Neon PostgreSQL**, **pandas**, and **Gradio Blocks**.
 
 ---
 
@@ -83,14 +83,15 @@ The system coordinates 6 specialized agents operating over a centralized typed b
 ## 🛠️ Tech Stack & Constraints
 
 - **Language:** Python 3.11+
-- **LLM SDK:** Google GenAI Python SDK (`google-genai` / `gemini-2.5-flash`)
+- **LLM SDK:** Groq Python SDK (`groq` / `openai/gpt-oss-20b`)
+- **Database:** Neon PostgreSQL (`psycopg2-binary`) with HTTPS fallback
 - **Data:** pandas, numpy
 - **UI:** Gradio (Blocks API)
 - **Charts:** Matplotlib
 - **Design Decisions:**
   - **No LLM Math:** Hard constraint strictly enforced.
   - **Conservative Safeguards:** Rent and loan EMIs are non-negotiable (100% protected). Nutritional grocery floor set to Rs. 3,000/month.
-  - **Offline / Fallback Resilience:** If `GEMINI_API_KEY` is not set or network fails, agents seamlessly execute deterministic tool logic without crashing.
+  - **Offline / Fallback Resilience:** If `GROQ_API_KEY` is not set or network fails, agents seamlessly execute deterministic tool logic without crashing.
 
 ---
 
@@ -103,14 +104,15 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment Variables
-Copy `.env.example` to `.env` and provide your Gemini API key (optional for offline tool run):
+Copy `.env.example` to `.env` and provide your Groq API key and Neon Database URL:
 ```bash
 copy .env.example .env
 ```
 Inside `.env`:
 ```ini
-GEMINI_API_KEY=your_actual_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=openai/gpt-oss-20b
+DATABASE_URL=postgresql://neondb_owner:your_password@ep-example.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 ```
 
 ### 3. Generate or Verify Sample Data
