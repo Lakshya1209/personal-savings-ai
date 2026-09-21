@@ -174,8 +174,17 @@ def get_faq_response(user_query: str, chat_history: Optional[List[Tuple[str, str
     # Contextual history summary
     history_context = ""
     if chat_history:
-        recent_turns = chat_history[-3:]
-        history_context = "\n".join([f"User: {u}\nAssistant: {a}" for u, a in recent_turns])
+        formatted_turns = []
+        for item in chat_history[-6:]:
+            if isinstance(item, dict):
+                role = str(item.get("role", "user")).capitalize()
+                content = item.get("content", "")
+                if content:
+                    formatted_turns.append(f"{role}: {content}")
+            elif isinstance(item, (list, tuple)) and len(item) == 2:
+                formatted_turns.append(f"User: {item[0]}\nAssistant: {item[1]}")
+        if formatted_turns:
+            history_context = "\n".join(formatted_turns)
 
     context_block = f"Previous conversation context:\n{history_context}\n\n" if history_context else ""
     prompt = f"""

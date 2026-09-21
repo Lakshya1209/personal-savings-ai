@@ -2299,19 +2299,15 @@ with gr.Blocks(title="Personal Savings & Cash Flow Advisory") as demo:
     # FAQ Bot Event Handlers
     def handle_faq_chat(user_msg, history):
         if not user_msg or not user_msg.strip():
-            return "", history
+            return "", history or []
         
-        chat_turns = []
-        if history:
-            for item in history:
-                if isinstance(item, (list, tuple)) and len(item) == 2:
-                    chat_turns.append((item[0], item[1]))
-                elif isinstance(item, dict):
-                    chat_turns.append((item.get("role", ""), item.get("content", "")))
-
-        bot_reply = get_faq_response(user_msg.strip(), chat_turns)
+        user_text = user_msg.strip()
         new_history = list(history) if history else []
-        new_history.append((user_msg.strip(), bot_reply))
+
+        bot_reply = get_faq_response(user_text, new_history)
+
+        new_history.append({"role": "user", "content": user_text})
+        new_history.append({"role": "assistant", "content": bot_reply})
         return "", new_history
 
     faq_send_btn.click(
